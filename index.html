@@ -1,0 +1,155 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>simulator_examples</title>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <style>
+      * {
+        font-family: system-ui;
+      }
+      li {
+        list-style-type: none;
+      }
+      ul {
+        margin-left: 0;
+        padding-left: 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="app">
+      <h1>{{inputs.picked}}</h1>
+
+      <span>Действия: </span>
+
+      <input
+        type="radio"
+        id="addition"
+        value="сложение"
+        v-model="inputs.picked"
+      />
+      <label for="addition">сложение</label>
+
+      <input
+        type="radio"
+        id="subtraction"
+        value="вычитание"
+        v-model="inputs.picked"
+      />
+      <label for="subtraction">вычитание</label>
+
+      <input
+        type="radio"
+        id="additionAndSubtraction"
+        value="сложение и вычитание"
+        v-model="inputs.picked"
+      />
+      <label for="additionAndSubtraction">сложение и вычитание</label>
+
+      <p>
+        <span>Исходные числа: </span>
+        <input v-model="inputs.initialNumberStart" type="number" /> до
+        <input v-model="inputs.initialNumberEnd" type="number" />
+      </p>
+      <p>
+        <span>Результаты: </span>
+        <input v-model="inputs.resultsNumberStart" type="number" /> до
+        <input v-model="inputs.resultsNumberEnd" type="number" />
+      </p>
+      <p>
+        <span>Количество слогаемых и вычитаемых: </span>
+        <input v-model="inputs.syllables" type="number" />
+      </p>
+      <p>
+        <span>Количество примеров: </span>
+        <input v-model="inputs.totalExamples" type="number" />
+      </p>
+
+      <button @click="getExamplesList">Генерировать</button>
+
+      <div>
+        <ul>
+          <li v-for="item in examplesList">{{ item.text }}</li>
+        </ul>
+      </div>
+    </div>
+    <script>
+      const { createApp } = Vue;
+
+      createApp({
+        data() {
+          return {
+            inputs: {
+              picked: "сложение и вычитание",
+              initialNumberStart: 0,
+              initialNumberEnd: 20,
+              resultsNumberStart: 0,
+              resultsNumberEnd: 20,
+              syllables: 3,
+              totalExamples: 30,
+            },
+            examplesList: 0,
+          };
+        },
+        methods: {
+          random(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+          },
+          determinant() {
+            if (this.inputs.picked === "сложение") return 1;
+            if (this.inputs.picked === "вычитание") return -1;
+            return this.random(0, 1) ? -1 : 1;
+          },
+          termsGenerator() {
+            const terms = [];
+            for (let index = 0; index < this.inputs.syllables; index++) {
+              terms[index] =
+                this.random(
+                  this.inputs.initialNumberStart,
+                  this.inputs.initialNumberEnd
+                ) * (index === 0 ? 1 : this.determinant());
+            }
+            const sum = terms.reduce((a, b) => a + b, 0);
+            const text =
+              terms
+                .map((it, index) => {
+                  if (index === 0) return it;
+                  if (it > 0) return `+${it}`;
+                  if (it === 0)
+                    return this.inputs.picked === "сложение"
+                      ? `+${it}`
+                      : `-${it}`;
+                  return it;
+                })
+                // .join("") + `=${sum}`;
+                .join("") + `=`;
+
+            return { terms, sum, text };
+          },
+          expressionGenerator() {
+            const expressions = [];
+            while (expressions.length < this.inputs.totalExamples) {
+              const terms = this.termsGenerator();
+              if (
+                terms.sum > this.inputs.resultsNumberStart &&
+                terms.sum <= this.inputs.initialNumberEnd
+              ) {
+                expressions.push(terms);
+              }
+            }
+            return expressions;
+          },
+          getExamplesList() {
+            this.examplesList = this.expressionGenerator();
+          },
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>
